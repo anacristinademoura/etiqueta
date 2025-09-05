@@ -29,7 +29,7 @@ Coloque esses arquivos na mesma pasta do script (ex.: `C:\Users\SeuUsuario\Docum
 ### Configuração da Impressora
 
 1. **Obtenha o IP da impressora**:
-    - Consulte o manual da impressora ou o painel de controle para encontrar o endereço IP (ex.: `192.168.1.100`).
+    - Consulte o manual da impressora ou o painel de controle para encontrar o endereço IP (ex.: `192.168.x.x`).
     - Verifique a conexão com:
       ```bash
       ping <IP_DA_IMPRESSORA>
