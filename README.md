@@ -207,7 +207,7 @@ A interface gráfica exibe campos para inserir dados da etiqueta.
 
 - Largura da folha (cm): Ex.: 15.
 - Altura da folha (cm): Ex.: 10.
-- IP da impressora: Insira o IP correto (ex.: 192.168.1.100, não use 127.0.0.1).
+- IP da impressora: Insira o IP correto (ex.: 192.168.x.x, não use 127.0.0.1).
 - Número do volume: Ex.: 100 (editável, incrementa ao imprimir).
 - Número do pedido: Ex.: 123.
 - Número da nota fiscal: Ex.: 456.
