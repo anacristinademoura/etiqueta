@@ -69,7 +69,7 @@ Coloque esses arquivos na mesma pasta do script (ex.: `C:\Users\SeuUsuario\Docum
     - Preencha os campos:
       - **Largura da folha (cm)**: Tamanho horizontal da etiqueta (ex.: 15).
       - **Altura da folha (cm)**: Tamanho vertical da etiqueta (ex.: 10).
-      - **IP da impressora**: Insira o IP da impressora (ex.: `192.168.1.100`).
+      - **IP da impressora**: Insira o IP da impressora (ex.: `192.168.x.x`).
       - **Número do volume**: Número da etiqueta (ex.: 100). Pode ser editado manualmente e só incrementa ao imprimir.
       - **Outros campos**: Pedido, NF, descrição, cor, código de torra, quantidades por tamanho (10, 12, 14, 16), e quantas etiquetas.
     - Clique em **Atualizar Visualização** para ver a etiqueta.
