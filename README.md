@@ -1,4 +1,4 @@
-# Leia-me: Editor de Etiquetas EPL
+# Editor de Etiquetas EPL
 
 Este programa (`etiqueta_epl.py`) permite criar e visualizar etiquetas no formato EPL2 para impressoras Zebra, além de enviá-las para impressão via rede. Ele gera etiquetas com informações como número do volume, pedido, nota fiscal, descrição, cor, código de torra, quantidades por tamanho e total de peças. O programa inclui uma interface gráfica com visualização da etiqueta, zoom, e suporte a ícones personalizados.
 
