@@ -111,7 +111,7 @@ q{largura_pontos}
 Q{altura_pontos},24
 
 ; Título
-A280,30,0,5,10,10,N,"Magazine Torra Torra Ltda"
+A280,30,0,5,10,10,N,"{d['titulo']}"
 
 ; Linhas horizontais da tabela
 LO54,120,1100,1
@@ -246,6 +246,7 @@ def create_gui():
     largura_var = tk.StringVar(value="15")
     altura_var = tk.StringVar(value="10")
     ip_var = tk.StringVar(value="127.0.0.1")
+    titulo_var = tk.StringVar(value="Magazine Torra Torra Ltda")
     volume_var = tk.StringVar(value=str(ler_ultimo_volume() + 1))  # Inicializa com o próximo volume
     pedido_var = tk.StringVar(value="0")
     nf_var = tk.StringVar(value="0")
@@ -283,6 +284,16 @@ def create_gui():
             return str(val)
         except ValueError:
             raise ValueError(f"{field_name} deve ser um número inteiro válido.")
+    
+    def get_string(value, field_name, max_length=50, allow_empty=True):
+        """Valida uma string, garantindo que não exceda o comprimento máximo."""
+        if not value and allow_empty:
+            return "Sem Título"
+        if not value:
+            raise ValueError(f"{field_name} não pode ser vazio.")
+        if len(value) > max_length:
+            raise ValueError(f"{field_name} não pode exceder {max_length} caracteres.")
+        return value
 
     def atualizar_visualizacao():
         """Atualiza a pré-visualização da etiqueta"""
@@ -304,8 +315,10 @@ def create_gui():
             total = str(int(q10 or 0) + int(q12 or 0) + int(q14 or 0) + int(q16 or 0))
 
             volume = get_int(volume_var.get(), "Número do volume", allow_empty=False)
+            titulo = get_string(titulo_var.get(), "Título", allow_empty=False)
 
             d = {
+                "titulo": titulo,
                 "volume": volume,
                 "pedido": pedido_var.get() or "Sem Pedido",
                 "nf": nf_var.get() or "Sem NF",
@@ -381,6 +394,7 @@ def create_gui():
 
             vezes = get_int(vezes_var.get(), "Quantidade de etiquetas", allow_empty=False)
             volume = int(get_int(volume_var.get(), "Número do volume", allow_empty=False))
+            titulo = get_string(titulo_var.get(), "Título", allow_empty=False)
             ultimo_volume = ler_ultimo_volume()
 
             # Alerta para volumes potencialmente duplicados
@@ -392,6 +406,7 @@ def create_gui():
             for _ in range(int(vezes)):
                 volume_atual = volume
                 d = {
+                    "titulo": titulo,
                     "volume": str(volume_atual),
                     "pedido": pedido_var.get() or "Sem Pedido",
                     "nf": nf_var.get() or "Sem NF",
@@ -432,6 +447,7 @@ def create_gui():
         ("Largura da folha (cm):", largura_var),
         ("Altura da folha (cm):", altura_var),
         ("IP da impressora:", ip_var),
+        ("Título:", titulo_var),
         ("Número do volume:", volume_var),
         ("Número do pedido:", pedido_var),
         ("Número da nota fiscal:", nf_var),
@@ -447,7 +463,7 @@ def create_gui():
 
     # Configurar o input_frame para expandir
     input_frame = ttk.Frame(root, padding=(20, 50, 15, 50))
-    input_frame.grid(row=0, column=0, sticky="ew")  # Expande em todas as direções
+    input_frame.grid(row=0, column=0, sticky="nsew")  # Expande em todas as direções
     input_frame.columnconfigure(0, weight=1)  # Labels têm peso menor
     input_frame.columnconfigure(1, weight=3)  # Entradas expandem mais
 
