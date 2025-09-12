@@ -1,3 +1,5 @@
+# ====== Site para visualizar EPl --> https://eplprinter.azurewebsites.net/
+
 # import socket
 # import os
 # import sys
@@ -493,6 +495,7 @@
 import socket
 import os
 import sys
+import re
 from PIL import Image, ImageDraw, ImageFont
 import platform
 import tkinter as tk
@@ -516,7 +519,12 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-def visualizar_epl(epl_code, largura_pontos, altura_pontos):
+def visualizar_epl(epl_code, largura_pontos=640, altura_pontos=800):
+    """
+    Renderiza um preview simples do EPL em uma imagem PIL.
+    Rotaciona apenas os textos para 0° (de esquerda para direita) e ajusta suas coordenadas
+    para alinhar com a rotação global de 90°, com offsets ajustáveis para posicionamento.
+    """
     img = Image.new("RGB", (largura_pontos, altura_pontos), "white")
     draw = ImageDraw.Draw(img)
 
@@ -524,41 +532,114 @@ def visualizar_epl(epl_code, largura_pontos, altura_pontos):
         font_large = ImageFont.truetype("arial.ttf", 52)
         font_small = ImageFont.truetype("arial.ttf", 16)
         font_bold = ImageFont.truetype("arialbd.ttf", 16)
-    except:
+    except Exception:
         font_large = ImageFont.load_default()
         font_small = ImageFont.load_default()
         font_bold = ImageFont.load_default()
 
+    # Ajustes manuais para deslocamento dos textos no preview
+    offset_x = -180  # Deslocamento em x (positivo: move para a direita, negativo: move para a esquerda)
+    offset_y = 190  # Deslocamento em y (positivo: move para baixo, negativo: move para cima)
+
     for linha in epl_code.split("\n"):
         linha = linha.strip()
-        if not linha or linha.startswith(";"):  # Ignora linhas vazias ou comentários
+        if not linha:
             continue
+        # remover comentários finais que começam em ';'
+        if ";" in linha:
+            linha_clean = linha.split(";", 1)[0].rstrip()
+            if not linha_clean:
+                continue
+            linha = linha_clean
+
         if linha.startswith("A"):
-            partes = linha.split(",")
-            if len(partes) < 8:
+            # Parsing robusto: isolamos o texto entre aspas se houver
+            texto = ""
+            if '"' in linha:
+                first_q = linha.find('"')
+                last_q = linha.rfind('"')
+                if last_q > first_q:
+                    texto = linha[first_q + 1:last_q]
+                    antes = linha[:first_q].rstrip(',')
+                    partes = antes.split(",")
+                else:
+                    partes = linha.split(",")
+            else:
+                partes = linha.split(",")
+                if len(partes) >= 7:
+                    texto = partes[-1]
+            # garantir número mínimo de campos
+            if len(partes) < 6:
                 continue
-            x, y = int(partes[0][1:]), int(partes[1])
-            fonte = int(partes[3])
-            escala_x, escala_y = int(partes[4]), int(partes[5])
-            texto = partes[-1].strip('"')
-            font = font_large if fonte == 5 and escala_x >= 7 else font_bold if escala_x >= 2 else font_small
-            draw.text((x, y), texto, fill="black", font=font)
+            try:
+                x = int(partes[0][1:])  # remove 'A' e pega x
+                y = int(partes[1])
+                # Transformar coordenadas para compensar a rotação global de 90°
+                new_x = y + offset_x
+                new_y = largura_pontos - x + offset_y
+                fonte = int(partes[3]) if len(partes) > 3 and partes[3].isdigit() else 0
+                escala_x = int(partes[4]) if len(partes) > 4 and partes[4].isdigit() else 1
+                escala_y = int(partes[5]) if len(partes) > 5 and partes[5].isdigit() else 1
+            except Exception:
+                continue
+            # escolher fonte aproximada
+            if fonte == 5 and escala_x >= 7:
+                font = font_large
+            elif escala_x >= 2:
+                font = font_bold
+            else:
+                font = font_small
+            # Desenhar texto com rotação -90° para compensar a rotação global de 90°
+            text_img = Image.new("RGBA", (largura_pontos, altura_pontos), (255, 255, 255, 0))
+            text_draw = ImageDraw.Draw(text_img)
+            text_draw.text((new_x, new_y), texto, fill="black", font=font)
+            text_img = text_img.rotate(270, expand=False)
+            img.paste(text_img, (0, 0), text_img)
+
         elif linha.startswith("LO"):
-            # Divide a linha e remove tudo após o primeiro comentário (;)
-            partes = linha[2:].split(";", 1)[0].split(",")
-            if len(partes) != 4:
+            # LOx,y,length,thickness - linhas horizontais
+            partes = linha[2:].split(",")
+            if len(partes) < 4:
                 continue
-            x, y, comprimento, espessura = map(int, partes)
-            draw.line((x, y, x + comprimento, y), fill="black", width=espessura * 2)
+            try:
+                x = int(partes[0])
+                y = int(partes[1])
+                comprimento = int(partes[2])
+                espessura = int(partes[3])
+                draw.line((x, y, x + comprimento, y), fill="black", width=max(1, espessura * 2))
+            except Exception:
+                continue
+
         elif linha.startswith("LE"):
-            # Divide a linha e remove tudo após o primeiro comentário (;)
-            partes = linha[2:].split(";", 1)[0].split(",")
-            if len(partes) != 5:
-                continue
-            x, y, _, altura, espessura = map(int, partes)
-            draw.line((x, y, x, y + altura), fill="black", width=espessura * 2)
+            # LEx,y,0,height,thickness - linhas verticais (algumas variantes)
+            partes = linha[2:].split(",")
+            if len(partes) < 5:
+                if len(partes) == 4:
+                    try:
+                        x = int(partes[0])
+                        y = int(partes[1])
+                        altura = int(partes[3])
+                        espessura = int(partes[2])
+                        draw.line((x, y, x, y + altura), fill="black", width=max(1, espessura * 2))
+                    except Exception:
+                        continue
+                else:
+                    continue
+            else:
+                try:
+                    x = int(partes[0])
+                    y = int(partes[1])
+                    altura = int(partes[3])
+                    espessura = int(partes[4])
+                    draw.line((x, y, x, y + altura), fill="black", width=max(1, espessura * 2))
+                except Exception:
+                    continue
+
+    # Aplicar rotação global de 90° para manter a orientação das linhas
+    # img = img.rotate(90, expand=True)
 
     return img
+
 
 def ler_ultimo_volume():
     """Lê o último número de volume do arquivo, retornando 0 se inválido ou não existente."""
@@ -592,22 +673,31 @@ def salvar_volume(volume):
 
 def enviar_para_zebra(printer_name, epl, retries=3):
     if platform.system() != "Windows":
-        raise NotImplementedError(
-            "Envio para impressora local apenas no Windows.")
+        raise NotImplementedError("Envio para impressora local apenas no Windows.")
 
     printers = [p[2] for p in win32print.EnumPrinters(
         win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
     if printer_name not in printers:
-        raise ValueError(
-            f"Impressora '{printer_name}' não encontrada. Impressoras disponíveis: {printers}")
+        raise ValueError(f"Impressora '{printer_name}' não encontrada. Impressoras disponíveis: {printers}")
 
-    data = epl.encode("utf-8")
+    # Tentar encoding compatível com Windows / impressoras térmicas
+    try_encodings = ["mbcs", "cp1252", "latin-1", "utf-8"]
+    data = None
+    for enc in try_encodings:
+        try:
+            data = epl.encode(enc)
+            break
+        except Exception:
+            data = None
+    if data is None:
+        # fallback rígido
+        data = epl.encode("utf-8", errors="replace")
+
     for attempt in range(retries):
         try:
             hPrinter = win32print.OpenPrinter(printer_name)
             try:
-                win32print.StartDocPrinter(
-                    hPrinter, 1, ("Etiqueta EPL", None, "RAW"))
+                win32print.StartDocPrinter(hPrinter, 1, ("Etiqueta EPL", None, "RAW"))
                 win32print.StartPagePrinter(hPrinter)
                 win32print.WritePrinter(hPrinter, data)
                 win32print.EndPagePrinter(hPrinter)
@@ -622,58 +712,108 @@ def enviar_para_zebra(printer_name, epl, retries=3):
                 return False
 
 
-def montar_epl(d, largura_pontos, altura_pontos):
+def montar_epl(d, largura_pontos=640, altura_pontos=800):
+    """
+    Aceita largura/altura em pontos só para compatibilidade com as chamadas do GUI.
+    (Hoje o layout é fixo no template — para adaptar dinamicamente seria necessário recalcular
+    todas as coordenadas.)
+    """
     return f"""
+
 N
-I8,1
-0D
-RO180
 q640
-Q800,24
+Q920,24
+D10
+S2
 
-; Título
-A550,350,1,2,2,2,N,"Magazine Torra Torra Ltda"
+; --- Moldura externa com 4 LO ---
+; topo: de X=100 até X=640 (largura 540), esp. 2
+LO0,80,540,2
 
-; Linhas horizontais da tabela
-LO0,120,500,1 ; cima
+; base: mesma largura, Y=890
+LO0,890,540,2
 
-LO0,300,500,1
+; esquerda: X=100, altura 810 (de 80 até 890)
+LO0,80,2,810
 
-LO0,500,350,1
-LO400,500,100,1
+; direita: começa em X=638, largura 2 (vai até 640 certinho)
+LO538,80,2,810
+X0,80,2,530,890     ; moldura de (100,80) até (630,890)   ← usa "X Box Draw"  [oai_citation:2‡www.servopack.de](https://www.servopack.de/support/zebra/EPL2_Manual.pdf)
 
-LO0,650,500,1
+; ===== Linhas horizontais internas ===== ; Y=300, para caber no retângulo (0 a 530) 
+; LO x,y,largura,altura  -> horizontal = altura=2
+LO0,300,540,3
+LO0,500,400,3
+LO450,500,90,3
 
-LO0,700,350,1
-LO0,750,350,1
-LO0,800,350,1
-LO0,850,350,1
+LO0,650,400,3
+LO450,650,90,3
+LO0,710,400,3
+LO0,770,400,3
+LO0,830,400,3
 
-LO0,900,350,1]
-LO450,900,50,1
+; ===== Linhas verticais internas =====
+; vertical = largura=2
+LO50,300,3,350
+LO100,300,3,350
+LO150,80,3,810
+LO200,80,3,810
+LO250,80,3,810
+LO300,80,3,810
+LO350,80,3,810
+LO400,80,3,810
+LO450,80,3,810
+LO500,80,3,810
 
-LO0,1119,500,1 ; baixo
+; ===== Título (maior) =====
+A590,190,1,2,3,2,N,"{d['titulo']}"
+; (seu conteúdo A... aqui, sem alterar X/Y que agora cabem)
 
-; Linhas verticais da tabela
-LE0,120,0,1000,1 ; esquerda
+; Conteúdo da tabela
+; Coluna 1
+A530,100,1,2,1,1,N,"N do Volume"
+A480,100,1,2,1,1,N,"N do Pedido"
+A430,100,1,2,1,1,N,"Descricao"
+A380,100,1,2,1,1,N,"Ref. Cod."
+A110,100,1,2,1,1,N,"Total de"
+A80,100,1,2,1,1,N,"pecas caixa"
 
-LE50,300,0,350,1
-LE50,900,0,220,1
+; Coluna 2
+A530,310,1,2,1,1,N,"{d['volume']}"
+A530,510,1,2,1,1,N,"{d['vezes1']}"
 
+A480,310,1,2,1,1,N,"{d['pedido']}"
+A430,310,1,2,1,1,N,"{d['descricao']}"
+A380,310,1,2,1,1,N,"{d['cod_torra']}"
 
-LE100,120,0,1000,1
-LE150,120,0,1000,1
-LE200,120,0,1000,1
-LE250,120,0,1000,1
-LE300,120,0,1000,1
-LE350,120,0,1000,1
-LE400,120,0,1000,1
-LE450,120,0,1000,1
-LE500,120,0,1000,1 ; direita
+A30,350,1,2,1,1,N,"{d['total']}"
 
+# ; Coluna 3
+A480,510,1,2,1,1,N,"N.F."
+A380,510,1,2,1,1,N,"Cor"
+A230,510,1,2,1,1,N,"{d['cor']}"
+
+# ; Coluna 4
+A480,665,1,2,1,1,N,"{d['nf']}"
+
+A380,660,1,2,1,1,N,"10"
+A380,720,1,2,1,1,N,"12"
+A380,780,1,2,1,1,N,"14"
+A380,840,1,2,1,1,N,"16"
+
+A230,665,1,2,1,1,N,"{d['q10']}"
+A230,725,1,2,1,1,N,"{d['q12']}"
+A230,785,1,2,1,1,N,"{d['q14']}"
+A230,845,1,2,1,1,N,"{d['q16']}"
+
+A100,665,1,2,1,1,N,"{d['q10']}"
+A100,725,1,2,1,1,N,"{d['q12']}"
+A100,785,1,2,1,1,N,"{d['q14']}"
+A100,845,1,2,1,1,N,"{d['q16']}"
 
 P1
 """
+
 
 def create_gui():
     root = tk.Tk()
@@ -720,9 +860,9 @@ def create_gui():
     preview_frame = ttk.Frame(root, padding=(0, 50, 0, 0))
     preview_frame.grid(row=0, column=1, sticky="nsew")
 
-    # Variáveis
-    altura_var = tk.StringVar(value="10")
-    largura_var = tk.StringVar(value="15")
+    # Variáveis (corrigidos: largura=10cm, altura=15cm conforme pedido)
+    largura_var = tk.StringVar(value="10")
+    altura_var = tk.StringVar(value="15")
     printer_var = tk.StringVar(value="ELGIN L42Pro") # ELGIN L42Pro ZDesigner TLP 2844
     titulo_var = tk.StringVar(value="Magazine Torra Torra Ltda")
     volume_var = tk.StringVar(value=str(ler_ultimo_volume() + 1))
@@ -789,7 +929,7 @@ def create_gui():
                 "volume": volume,
                 "pedido": pedido_var.get() or "Sem Pedido",
                 "nf": nf_var.get() or "Sem NF",
-                "descricao": descricao_var.get() or "Sem Descrição",
+                "descricao": descricao_var.get() or "Sem Descricao",
                 "cor": cor_var.get() or "Sem Cor",
                 "cod_torra": cod_torra_var.get() or "Sem Código",
                 "q10": q10,
@@ -797,16 +937,21 @@ def create_gui():
                 "q14": q14,
                 "q16": q16,
                 "total": total,
+                "vezes1": vezes_var.get() or "1",
             }
 
             epl = montar_epl(d, largura_pontos, altura_pontos)
             img = visualizar_epl(epl, largura_pontos, altura_pontos)
 
+            # scale para caber no canvas mantendo proporção
+            canvas_width = canvas.winfo_width() or 800
+            canvas_height = canvas.winfo_height() or 1200
+
+            scale = min(canvas_width / largura_pontos, canvas_height / altura_pontos) * canvas.scale_factor
+            scale = max(0.01, scale)
+            new_size = (max(1, int(largura_pontos * scale)), max(1, int(altura_pontos * scale)))
+
             img_copy = img.copy()
-            canvas_width = canvas.winfo_width() or 500
-            canvas_height = canvas.winfo_height() or 400
-            base_size = min(canvas_width, canvas_height) * 0.9
-            new_size = (int(base_size * canvas.scale_factor), int(base_size * canvas.scale_factor))
             img_copy.thumbnail(new_size, Image.Resampling.LANCZOS)
             photo = ImageTk.PhotoImage(img_copy)
 
@@ -820,9 +965,16 @@ def create_gui():
                             text="Erro na visualização. Verifique os dados.", anchor="center")
 
     def zoom(event):
-        zoom_factor = 1.1 if event.delta > 0 or event.num == 4 else 0.9
+        # event.delta no Windows, event.num no X11
+        try:
+            if hasattr(event, "delta"):
+                zoom_factor = 1.1 if event.delta > 0 else 0.9
+            else:
+                zoom_factor = 1.1 if event.num == 4 else 0.9
+        except Exception:
+            zoom_factor = 1.1
         canvas.scale_factor *= zoom_factor
-        canvas.scale_factor = max(0.5, min(canvas.scale_factor, 5.0))
+        canvas.scale_factor = max(0.1, min(canvas.scale_factor, 5.0))
         atualizar_visualizacao()
 
     def start_pan(event):
@@ -869,14 +1021,15 @@ def create_gui():
                     "volume": str(volume_atual),
                     "pedido": pedido_var.get() or "Sem Pedido",
                     "nf": nf_var.get() or "Sem NF",
-                    "descricao": descricao_var.get() or "Sem Descrição",
+                    "descricao": descricao_var.get() or "Sem Descricao",
                     "cor": cor_var.get() or "Sem Cor",
                     "cod_torra": cod_torra_var.get() or "Sem Código",
                     "q10": q10,
                     "q12": q12,
                     "q14": q14,
                     "q16": q16,
-                    "total": total,
+                    "total": total,                    
+                    "vezes1": vezes,
                 }
                 epl = montar_epl(d, largura_pontos, altura_pontos)
 
@@ -913,8 +1066,6 @@ def create_gui():
 
     # Campos de entrada
     entries = [
-        ("Altura da folha (cm):", altura_var),
-        ("Largura da folha (cm):", largura_var),
         ("Nome da impressora:", printer_var),
         ("Título:", titulo_var),
         ("Número do volume:", volume_var),
