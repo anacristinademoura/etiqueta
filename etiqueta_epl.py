@@ -519,124 +519,123 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-def visualizar_epl(epl_code, largura_pontos=640, altura_pontos=800):
+from PIL import Image, ImageDraw, ImageFont
+
+from PIL import Image, ImageDraw, ImageFont
+
+def visualizar_epl(epl, largura_pontos=640, altura_pontos=920):
     """
-    Renderiza um preview simples do EPL em uma imagem PIL.
-    Rotaciona apenas os textos para 0° (de esquerda para direita) e ajusta suas coordenadas
-    para alinhar com a rotação global de 90°, com offsets ajustáveis para posicionamento.
+    Gera uma imagem de visualização prévia a partir de um código EPL.
+    Aumenta o tamanho da fonte do título (identificado por h_mult=3, v_mult=2) na visualização.
+    
+    Args:
+        epl (str): Código EPL a ser renderizado.
+        largura_pontos (int): Largura da etiqueta em pontos (8 pontos/mm).
+        altura_pontos (int): Altura da etiqueta em pontos (ajustado para 920).
+    
+    Returns:
+        PIL.Image: Imagem renderizada da etiqueta.
     """
+    # Cria uma imagem em branco (fundo branco, modo RGB para compatibilidade com ImageTk)
     img = Image.new("RGB", (largura_pontos, altura_pontos), "white")
     draw = ImageDraw.Draw(img)
 
+    # Tenta carregar uma fonte TrueType para melhor renderização
     try:
-        font_large = ImageFont.truetype("arial.ttf", 52)
-        font_small = ImageFont.truetype("arial.ttf", 16)
-        font_bold = ImageFont.truetype("arialbd.ttf", 16)
-    except Exception:
-        font_large = ImageFont.load_default()
-        font_small = ImageFont.load_default()
-        font_bold = ImageFont.load_default()
+        font_path = "arial.ttf"  # Substitua pelo caminho de uma fonte TrueType no seu sistema
+        font_default = ImageFont.truetype(font_path, 18)  # Tamanho padrão para textos
+        font_title = ImageFont.truetype(font_path, 45)    # Tamanho maior para o título
+    except:
+        font_default = ImageFont.load_default()  # Fallback para fonte padrão
+        font_title = ImageFont.load_default()    # Fallback para título
 
-    # Ajustes manuais para deslocamento dos textos no preview
-    offset_x = -180  # Deslocamento em x (positivo: move para a direita, negativo: move para a esquerda)
-    offset_y = 190  # Deslocamento em y (positivo: move para baixo, negativo: move para cima)
+    # Offsets para ajuste fino do alinhamento
+    offset_x = -190  # Ajuste para mover textos para a direita
+    offset_y = 200   # Ajuste para mover textos para baixo
 
-    for linha in epl_code.split("\n"):
-        linha = linha.strip()
-        if not linha:
-            continue
-        # remover comentários finais que começam em ';'
-        if ";" in linha:
-            linha_clean = linha.split(";", 1)[0].rstrip()
-            if not linha_clean:
-                continue
-            linha = linha_clean
+    # Padding para permitir coordenadas negativas
+    padding = 200  # Ajuste para cobrir offsets negativos
 
-        if linha.startswith("A"):
-            # Parsing robusto: isolamos o texto entre aspas se houver
-            texto = ""
-            if '"' in linha:
-                first_q = linha.find('"')
-                last_q = linha.rfind('"')
-                if last_q > first_q:
-                    texto = linha[first_q + 1:last_q]
-                    antes = linha[:first_q].rstrip(',')
-                    partes = antes.split(",")
-                else:
-                    partes = linha.split(",")
-            else:
-                partes = linha.split(",")
-                if len(partes) >= 7:
-                    texto = partes[-1]
-            # garantir número mínimo de campos
-            if len(partes) < 6:
-                continue
+    # Divide o EPL em linhas e processa cada comando
+    lines = epl.strip().splitlines()
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith(";") or line.startswith("P") or line.startswith("N") or line.startswith("q") or line.startswith("Q") or line.startswith("D") or line.startswith("S"):
+            continue  # Ignora comentários, comandos de impressão e configurações
+
+        # Comando LO (Line Or Box)
+        if line.startswith("LO"):
             try:
-                x = int(partes[0][1:])  # remove 'A' e pega x
-                y = int(partes[1])
-                # Transformar coordenadas para compensar a rotação global de 90°
-                new_x = y + offset_x
-                new_y = largura_pontos - x + offset_y
-                fonte = int(partes[3]) if len(partes) > 3 and partes[3].isdigit() else 0
-                escala_x = int(partes[4]) if len(partes) > 4 and partes[4].isdigit() else 1
-                escala_y = int(partes[5]) if len(partes) > 5 and partes[5].isdigit() else 1
-            except Exception:
-                continue
-            # escolher fonte aproximada
-            if fonte == 5 and escala_x >= 7:
-                font = font_large
-            elif escala_x >= 2:
-                font = font_bold
-            else:
-                font = font_small
-            # Desenhar texto com rotação -90° para compensar a rotação global de 90°
-            text_img = Image.new("RGBA", (largura_pontos, altura_pontos), (255, 255, 255, 0))
-            text_draw = ImageDraw.Draw(text_img)
-            text_draw.text((new_x, new_y), texto, fill="black", font=font)
-            text_img = text_img.rotate(270, expand=False)
-            img.paste(text_img, (0, 0), text_img)
+                parts = line[2:].split(",")
+                if len(parts) == 4:
+                    x, y, width, height = map(int, parts)
+                    # Desenha um retângulo preenchido
+                    draw.rectangle(
+                        [(x, y), (x + width - 1, y + height - 1)],
+                        fill="black"
+                    )
+            except Exception as e:
+                print(f"Erro ao processar comando LO: {line} ({e})")
 
-        elif linha.startswith("LO"):
-            # LOx,y,length,thickness - linhas horizontais
-            partes = linha[2:].split(",")
-            if len(partes) < 4:
-                continue
+        # Comando X (Box Draw)
+        elif line.startswith("X"):
             try:
-                x = int(partes[0])
-                y = int(partes[1])
-                comprimento = int(partes[2])
-                espessura = int(partes[3])
-                draw.line((x, y, x + comprimento, y), fill="black", width=max(1, espessura * 2))
-            except Exception:
-                continue
+                parts = line[1:].split(",")
+                if len(parts) == 5:
+                    x1, y1, thickness, x2, y2 = map(int, parts)
+                    # Desenha um retângulo com bordas
+                    draw.rectangle(
+                        [(x1, y1), (x2, y2)],
+                        outline="black",
+                        width=thickness
+                    )
+            except Exception as e:
+                print(f"Erro ao processar comando X: {line} ({e})")
 
-        elif linha.startswith("LE"):
-            # LEx,y,0,height,thickness - linhas verticais (algumas variantes)
-            partes = linha[2:].split(",")
-            if len(partes) < 5:
-                if len(partes) == 4:
-                    try:
-                        x = int(partes[0])
-                        y = int(partes[1])
-                        altura = int(partes[3])
-                        espessura = int(partes[2])
-                        draw.line((x, y, x, y + altura), fill="black", width=max(1, espessura * 2))
-                    except Exception:
-                        continue
-                else:
-                    continue
-            else:
-                try:
-                    x = int(partes[0])
-                    y = int(partes[1])
-                    altura = int(partes[3])
-                    espessura = int(partes[4])
-                    draw.line((x, y, x, y + altura), fill="black", width=max(1, espessura * 2))
-                except Exception:
-                    continue
+        # Comando A (Text)
+        elif line.startswith("A"):
+            try:
+                parts = line[1:].split(",")
+                if len(parts) >= 8:
+                    x, y = int(parts[0]), int(parts[1])
+                    rotation = int(parts[2])
+                    font_id = int(parts[3])  # Não usado
+                    h_mult = int(parts[4])   # Usado para identificar o título
+                    v_mult = int(parts[5])   # Usado para identificar o título
+                    reverse = parts[6]
+                    text = parts[7].strip('"')
+
+                    # Escolher fonte com base nos parâmetros (título tem h_mult=3, v_mult=2)
+                    font = font_title if h_mult == 3 and v_mult == 2 else font_default
+
+                    # Ajustar coordenadas e rotação
+                    if rotation == 1:  # 90° horário
+                        new_x = y + offset_x
+                        new_y = largura_pontos - x + offset_y
+                        angle = 270  # Rotação anti-horária para PIL
+                    else:  # Sem rotação (ou outras rotações não implementadas)
+                        new_x = x + offset_x
+                        new_y = y + offset_y
+                        angle = 0
+
+                    # Criar imagem temporária para o texto com padding para coordenadas negativas
+                    text_img = Image.new("RGBA", (largura_pontos + 2*padding, altura_pontos + 2*padding), (255, 255, 255, 0))
+                    text_draw = ImageDraw.Draw(text_img)
+                    fill_color = "black" if reverse == "N" else "white"
+                    text_draw.text((new_x + padding, new_y + padding), text, fill=fill_color, font=font)
+
+                    # Rotacionar o texto se necessário
+                    if angle != 0:
+                        text_img = text_img.rotate(angle, expand=False)
+
+                    # Colar o texto na imagem principal com offset para padding
+                    img.paste(text_img, (-padding, -padding), text_img)
+
+            except Exception as e:
+                print(f"Erro ao processar comando A: {line} ({e})")
 
     # Aplicar rotação global de 90° para manter a orientação das linhas
-    # img = img.rotate(90, expand=True)
+    img = img.rotate(90, expand=True)
 
     return img
 
@@ -712,104 +711,93 @@ def enviar_para_zebra(printer_name, epl, retries=3):
                 return False
 
 
-def montar_epl(d, largura_pontos=640, altura_pontos=800):
-    """
-    Aceita largura/altura em pontos só para compatibilidade com as chamadas do GUI.
-    (Hoje o layout é fixo no template — para adaptar dinamicamente seria necessário recalcular
-    todas as coordenadas.)
-    """
-    return f"""
+def montar_epl(d, largura_pontos=640, altura_pontos=920):
+    # Deslocamentos para mover um pouco para a direita e para baixo
+    offset_x = 70  # Move pontos para a direita
+    offset_y = 0  # Move pontos para baixo
 
+    return f"""
 N
-q640
-Q920,24
+q{largura_pontos}
+Q{altura_pontos},24
 D10
 S2
 
 ; --- Moldura externa com 4 LO ---
-; topo: de X=100 até X=640 (largura 540), esp. 2
-LO0,80,540,2
+; topo: de X=20 até X=560 (largura 540), esp. 2
+LO{0 + offset_x},{80 + offset_y},540,2
 
-; base: mesma largura, Y=890
-LO0,890,540,2
+; base: mesma largura, Y=910
+LO{0 + offset_x},{890 + offset_y},540,2
 
-; esquerda: X=100, altura 810 (de 80 até 890)
-LO0,80,2,810
+; esquerda: X=20, altura 810 (de 100 até 910)
+LO{0 + offset_x},{80 + offset_y},2,810
 
-; direita: começa em X=638, largura 2 (vai até 640 certinho)
-LO538,80,2,810
-X0,80,2,530,890     ; moldura de (100,80) até (630,890)   ← usa "X Box Draw"  [oai_citation:2‡www.servopack.de](https://www.servopack.de/support/zebra/EPL2_Manual.pdf)
+; direita: começa em X=558, largura 2 (vai até 560)
+LO{538 + offset_x},{80 + offset_y},2,810
+X{0 + offset_x},{80 + offset_y},2,{530 + offset_x},{890 + offset_y}     ; moldura de (20,100) até (550,910)
 
-; ===== Linhas horizontais internas ===== ; Y=300, para caber no retângulo (0 a 530) 
-; LO x,y,largura,altura  -> horizontal = altura=2
-LO0,300,540,3
-LO0,500,400,3
-LO450,500,90,3
-
-LO0,650,400,3
-LO450,650,90,3
-LO0,710,400,3
-LO0,770,400,3
-LO0,830,400,3
+; ===== Linhas horizontais internas =====
+LO{0 + offset_x},{300 + offset_y},540,3
+LO{0 + offset_x},{500 + offset_y},400,3
+LO{450 + offset_x},{500 + offset_y},90,3
+LO{0 + offset_x},{650 + offset_y},400,3
+LO{450 + offset_x},{650 + offset_y},90,3
+LO{0 + offset_x},{710 + offset_y},400,3
+LO{0 + offset_x},{770 + offset_y},400,3
+LO{0 + offset_x},{830 + offset_y},400,3
 
 ; ===== Linhas verticais internas =====
-; vertical = largura=2
-LO50,300,3,350
-LO100,300,3,350
-LO150,80,3,810
-LO200,80,3,810
-LO250,80,3,810
-LO300,80,3,810
-LO350,80,3,810
-LO400,80,3,810
-LO450,80,3,810
-LO500,80,3,810
+LO{50 + offset_x},{300 + offset_y},3,350
+LO{100 + offset_x},{300 + offset_y},3,350
+LO{150 + offset_x},{80 + offset_y},3,810
+LO{200 + offset_x},{80 + offset_y},3,810
+LO{250 + offset_x},{80 + offset_y},3,810
+LO{300 + offset_x},{80 + offset_y},3,810
+LO{350 + offset_x},{80 + offset_y},3,810
+LO{400 + offset_x},{80 + offset_y},3,810
+LO{450 + offset_x},{80 + offset_y},3,810
+LO{500 + offset_x},{80 + offset_y},3,810
 
 ; ===== Título (maior) =====
-A590,190,1,2,3,2,N,"{d['titulo']}"
-; (seu conteúdo A... aqui, sem alterar X/Y que agora cabem)
+A{590 + offset_x},{190 + offset_y},1,2,3,2,N,"{d['titulo']}"
 
-; Conteúdo da tabela
+; ===== Conteúdo da tabela =====
 ; Coluna 1
-A530,100,1,2,1,1,N,"N do Volume"
-A480,100,1,2,1,1,N,"N do Pedido"
-A430,100,1,2,1,1,N,"Descricao"
-A380,100,1,2,1,1,N,"Ref. Cod."
-A110,100,1,2,1,1,N,"Total de"
-A80,100,1,2,1,1,N,"pecas caixa"
+A{530 + offset_x},{100 + offset_y},1,2,1,1,N,"N do Volume"
+A{480 + offset_x},{100 + offset_y},1,2,1,1,N,"N do Pedido"
+A{430 + offset_x},{100 + offset_y},1,2,1,1,N,"Descricao"
+A{380 + offset_x},{100 + offset_y},1,2,1,1,N,"Ref. Cod."
+A{110 + offset_x},{100 + offset_y},1,2,1,1,N,"Total de"
+A{80 + offset_x},{100 + offset_y},1,2,1,1,N,"pecas caixa"
 
 ; Coluna 2
-A530,310,1,2,1,1,N,"{d['volume']}"
-A530,510,1,2,1,1,N,"{d['vezes1']}"
+A{530 + offset_x},{310 + offset_y},1,2,1,1,N,"{d['volume']}"
+A{530 + offset_x},{510 + offset_y},1,2,1,1,N,"{d['vezes1']}"
+A{480 + offset_x},{310 + offset_y},1,2,1,1,N,"{d['pedido']}"
+A{430 + offset_x},{310 + offset_y},1,2,1,1,N,"{d['descricao']}"
+A{380 + offset_x},{310 + offset_y},1,2,1,1,N,"{d['cod_torra']}"
+A{30 + offset_x},{350 + offset_y},1,2,1,1,N,"{d['total']}"
 
-A480,310,1,2,1,1,N,"{d['pedido']}"
-A430,310,1,2,1,1,N,"{d['descricao']}"
-A380,310,1,2,1,1,N,"{d['cod_torra']}"
+; Coluna 3
+A{480 + offset_x},{510 + offset_y},1,2,1,1,N,"N.F."
+A{380 + offset_x},{510 + offset_y},1,2,1,1,N,"Cor"
+A{230 + offset_x},{510 + offset_y},1,2,1,1,N,"{d['cor']}"
 
-A30,350,1,2,1,1,N,"{d['total']}"
-
-# ; Coluna 3
-A480,510,1,2,1,1,N,"N.F."
-A380,510,1,2,1,1,N,"Cor"
-A230,510,1,2,1,1,N,"{d['cor']}"
-
-# ; Coluna 4
-A480,665,1,2,1,1,N,"{d['nf']}"
-
-A380,660,1,2,1,1,N,"10"
-A380,720,1,2,1,1,N,"12"
-A380,780,1,2,1,1,N,"14"
-A380,840,1,2,1,1,N,"16"
-
-A230,665,1,2,1,1,N,"{d['q10']}"
-A230,725,1,2,1,1,N,"{d['q12']}"
-A230,785,1,2,1,1,N,"{d['q14']}"
-A230,845,1,2,1,1,N,"{d['q16']}"
-
-A100,665,1,2,1,1,N,"{d['q10']}"
-A100,725,1,2,1,1,N,"{d['q12']}"
-A100,785,1,2,1,1,N,"{d['q14']}"
-A100,845,1,2,1,1,N,"{d['q16']}"
+; Coluna 4
+A{480 + offset_x},{665 + offset_y},1,2,1,1,N,"{d['nf']}"
+A{380 + offset_x},{660 + offset_y},1,2,1,1,N,"10"
+A{380 + offset_x},{720 + offset_y},1,2,1,1,N,"12"
+A{380 + offset_x},{780 + offset_y},1,2,1,1,N,"14"
+A{380 + offset_x},{840 + offset_y},1,2,1,1,N,"16"
+A{230 + offset_x},{665 + offset_y},1,2,1,1,N,"{d['q10']}"
+A{230 + offset_x},{725 + offset_y},1,2,1,1,N,"{d['q12']}"
+A{230 + offset_x},{785 + offset_y},1,2,1,1,N,"{d['q14']}"
+A{230 + offset_x},{845 + offset_y},1,2,1,1,N,"{d['q16']}"
+A{100 + offset_x},{665 + offset_y},1,2,1,1,N,"{d['q10']}"
+A{100 + offset_x},{725 + offset_y},1,2,1,1,N,"{d['q12']}"
+A{100 + offset_x},{785 + offset_y},1,2,1,1,N,"{d['q14']}"
+A{100 + offset_x},{845 + offset_y},1,2,1,1,N,"{d['q16']}"
 
 P1
 """
