@@ -219,7 +219,7 @@ def enviar_para_zebra(printer_name, epl, retries=3):
 
 def montar_epl(d, largura_pontos=640, altura_pontos=920, grade="10/12/14/16"):
     # Deslocamentos para mover um pouco para a direita e para baixo
-    offset_x = 70  # Move pontos para a direita
+    offset_x = 100  # Move pontos para a direita
     offset_y = 0   # Move pontos para baixo
 
     # Definir os tamanhos com base na grade selecionada
@@ -245,128 +245,129 @@ D10
 S2
 
 ; --- Moldura externa com 4 LO ---
-LO{0 + offset_x},{80 + offset_y},540,3
-LO{0 + offset_x},{890 + offset_y},540,3
-LO{0 + offset_x},{80 + offset_y},3,810
-LO{538 + offset_x},{80 + offset_y},3,810
-X{0 + offset_x},{80 + offset_y},3,{540 + offset_x},{890 + offset_y}
-"""
 
-    # Linhas horizontais internas
-    if num_colunas == 4:
-        epl += f"""
-; ===== Linhas horizontais internas =====
-LO{0 + offset_x},{300 + offset_y},540,3
-LO{0 + offset_x},{500 + offset_y},400,3
-LO{450 + offset_x},{500 + offset_y},90,3
-LO{0 + offset_x},{650 + offset_y},400,3
-LO{450 + offset_x},{650 + offset_y},90,3
-LO{0 + offset_x},{710 + offset_y},400,3
-LO{0 + offset_x},{770 + offset_y},400,3
-LO{0 + offset_x},{830 + offset_y},400,3
-"""
-    else:  # 3 colunas
-        epl += f"""
-; ===== Linhas horizontais internas =====
-LO{0 + offset_x},{300 + offset_y},540,3
-LO{0 + offset_x},{500 + offset_y},400,3
-LO{450 + offset_x},{500 + offset_y},90,3
-LO{0 + offset_x},{650 + offset_y},400,3
-LO{450 + offset_x},{650 + offset_y},90,3
-LO{0 + offset_x},{725 + offset_y},400,3
-LO{0 + offset_x},{805 + offset_y},400,3
-# LO{0 + offset_x},{830 + offset_y},400,3
+X{0 + offset_x},{80 + offset_y},3,{540 + offset_x},{890 + 250}
 """
 
     # Linhas verticais internas
     if num_colunas == 4:
         epl += f"""
-; ===== Linhas verticais internas =====
-LO{50 + offset_x},{300 + offset_y},3,350
-LO{100 + offset_x},{300 + offset_y},3,350
-LO{150 + offset_x},{80 + offset_y},3,810
-LO{200 + offset_x},{80 + offset_y},3,810
-LO{250 + offset_x},{80 + offset_y},3,810
-LO{300 + offset_x},{80 + offset_y},3,810
-LO{350 + offset_x},{80 + offset_y},3,810
-LO{400 + offset_x},{80 + offset_y},3,810
-LO{450 + offset_x},{80 + offset_y},3,810
-LO{500 + offset_x},{80 + offset_y},3,810
+; ===== Linhas vertical internas 4 Colunas =====
+LO{0 + offset_x},{350 + offset_y},540,3
+LO{0 + offset_x},{500 + offset_y},400,3
+LO{450 + offset_x},{500 + offset_y},90,3
+LO{450 + offset_x},{650 + offset_y},90,3
+LO{0 + offset_x},{660 + offset_y},400,3
+LO{0 + offset_x},{720 + offset_y},400,3
+LO{0 + offset_x},{780 + offset_y},400,3
+LO{0 + offset_x},{840 + offset_y},400,3
+LO{0 + offset_x},{900 + offset_y},540,3
 """
     else:  # 3 colunas
         epl += f"""
-; ===== Linhas verticais internas =====
-LO{50 + offset_x},{300 + offset_y},3,350
-LO{100 + offset_x},{300 + offset_y},3,350
-LO{150 + offset_x},{80 + offset_y},3,810
-LO{200 + offset_x},{80 + offset_y},3,810
-LO{250 + offset_x},{80 + offset_y},3,810
-LO{300 + offset_x},{80 + offset_y},3,810
-LO{350 + offset_x},{80 + offset_y},3,810
-LO{400 + offset_x},{80 + offset_y},3,810
-LO{450 + offset_x},{80 + offset_y},3,810
-LO{500 + offset_x},{80 + offset_y},3,810
+; ===== Linhas verticais internas 3 Colunas =====
+LO{0 + offset_x},{350 + offset_y},540,3
+LO{0 + offset_x},{500 + offset_y},400,3
+LO{450 + offset_x},{500 + offset_y},90,3
+LO{0 + offset_x},{670 + offset_y},400,3
+LO{450 + offset_x},{670 + offset_y},90,3
+LO{0 + offset_x},{760 + offset_y},400,3
+LO{450 + offset_x},{910 + offset_y},90,3
+LO{0 + offset_x},{860 + offset_y},400,3
+LO{0 + offset_x},{960 + offset_y},400,3
+"""
+
+    # Linhas horizontais internas
+    if num_colunas == 4:
+        epl += f"""
+; ===== Linhas horizontais internas 4 Colunas=====
+LO{50 + offset_x},{350 + offset_y},3,790
+LO{100 + offset_x},{350 + offset_y},3,790
+LO{150 + offset_x},{80 + offset_y},3,1060
+LO{200 + offset_x},{80 + offset_y},3,1060
+LO{250 + offset_x},{80 + offset_y},3,1060
+LO{300 + offset_x},{80 + offset_y},3,1060
+LO{350 + offset_x},{80 + offset_y},3,1060
+LO{400 + offset_x},{80 + offset_y},3,1060
+LO{450 + offset_x},{80 + offset_y},3,1060
+LO{500 + offset_x},{80 + offset_y},3,1060
+"""
+    else:  # 3 colunas
+        epl += f"""
+; ===== Linhas horizontais internas 3 Colunas =====
+LO{50 + offset_x},{350 + offset_y},3,790
+LO{100 + offset_x},{350 + offset_y},3,790
+LO{150 + offset_x},{80 + offset_y},3,1060
+LO{200 + offset_x},{80 + offset_y},3,1060
+LO{250 + offset_x},{80 + offset_y},3,1060
+LO{300 + offset_x},{80 + offset_y},3,1060
+LO{350 + offset_x},{80 + offset_y},3,1060
+LO{400 + offset_x},{80 + offset_y},3,1060
+LO{450 + offset_x},{80 + offset_y},3,1060
+LO{500 + offset_x},{80 + offset_y},3,1060
 """
 
     # Título e conteúdo da tabela
     epl += f"""
 ; ===== Título (maior) =====
-A{600 + offset_x},{190 + offset_y},1,2,3,2,N,"{d['titulo']}"
+A{620 + offset_x},{280 + offset_y},1,3,3,2,N,"{d['titulo']}"
 
 ; ===== Conteúdo da tabela =====
 ; Coluna 1
-A{530 + offset_x},{100 + offset_y},1,2,1,1,N,"N do Volume"
-A{480 + offset_x},{100 + offset_y},1,2,1,1,N,"N do Pedido"
-A{430 + offset_x},{100 + offset_y},1,2,1,1,N,"Descricao"
-A{380 + offset_x},{100 + offset_y},1,2,1,1,N,"Ref. Cod."
-A{110 + offset_x},{100 + offset_y},1,2,1,1,N,"Total de"
-A{80 + offset_x},{100 + offset_y},1,2,1,1,N,"pecas caixa"
+A{530 + offset_x},{100 + offset_y},1,1,2,2,N,"N do Volume"
+A{480 + offset_x},{100 + offset_y},1,1,2,2,N,"N do Pedido"
+A{430 + offset_x},{100 + offset_y},1,1,2,2,N,"Descricao"
+A{110 + offset_x},{100 + offset_y},1,1,2,2,N,"Total de"
+A{80 + offset_x},{100 + offset_y},1,1,2,2,N,"pecas caixa"
 
 ; Coluna 2
-A{530 + offset_x},{310 + offset_y},1,2,1,1,N,"{d['volume']}"
-A{530 + offset_x},{510 + offset_y},1,2,1,1,N,"{d['vezes1']}"
-A{480 + offset_x},{310 + offset_y},1,2,1,1,N,"{d['pedido']}"
-A{430 + offset_x},{310 + offset_y},1,2,1,1,N,"{d['descricao']}"
-A{380 + offset_x},{310 + offset_y},1,2,1,1,N,"{d['cod_torra']}"
-A{35 + offset_x},{350 + offset_y},1,2,1,1,N,"{d['total']}"
+A{530 + offset_x},{370 + offset_y},1,1,2,2,N,"{d['volume']}"
+A{530 + offset_x},{520 + offset_y},1,1,2,2,N,"{d['vezes1']}"
+A{480 + offset_x},{370 + offset_y},1,1,2,2,N,"{d['pedido']}"
+A{430 + offset_x},{370 + offset_y},1,1,2,2,N,"{d['descricao']}"
+A{35 + offset_x},{380 + offset_y},1,1,2,2,N,"{d['total']}"
 
 ; Coluna 3
-A{480 + offset_x},{510 + offset_y},1,2,1,1,N,"N.F."
-A{380 + offset_x},{510 + offset_y},1,2,1,1,N,"Cor"
-A{230 + offset_x},{510 + offset_y},1,2,1,1,N,"{d['cor']}"
-A{480 + offset_x},{665 + offset_y},1,2,1,1,N,"{d['nf']}"
+A{530 + offset_x},{680 + offset_y},1,1,2,2,N,"Ref. Cod."
+A{480 + offset_x},{520 + offset_y},1,1,2,2,N,"N.F."
+A{380 + offset_x},{520 + offset_y},1,1,2,2,N,"Cor"
+A{530 + offset_x},{930 + offset_y},1,1,2,2,N,"{d['cod_torra']}"
+A{230 + offset_x},{510 + offset_y},1,1,2,2,N,"{d['cor']}"
+A{480 + offset_x},{680 + offset_y},1,1,2,2,N,"{d['nf']}"
 """
 
     # Tamanhos dinâmicos com base na grade
     if num_colunas == 4:
         epl += f"""
 ; Coluna 4
-A{380 + offset_x},{660 + offset_y},1,2,1,1,N,"{tamanhos[0]}"
-A{380 + offset_x},{720 + offset_y},1,2,1,1,N,"{tamanhos[1]}"
-A{380 + offset_x},{780 + offset_y},1,2,1,1,N,"{tamanhos[2]}"
-A{380 + offset_x},{840 + offset_y},1,2,1,1,N,"{tamanhos[3]}"
-A{230 + offset_x},{665 + offset_y},1,2,1,1,N,"{d['q10']}"
-A{230 + offset_x},{725 + offset_y},1,2,1,1,N,"{d['q12']}"
-A{230 + offset_x},{785 + offset_y},1,2,1,1,N,"{d['q14']}"
-A{230 + offset_x},{845 + offset_y},1,2,1,1,N,"{d['q16']}"
-A{100 + offset_x},{665 + offset_y},1,2,1,1,N,"{d['q10']}"
-A{100 + offset_x},{725 + offset_y},1,2,1,1,N,"{d['q12']}"
-A{100 + offset_x},{785 + offset_y},1,2,1,1,N,"{d['q14']}"
-A{100 + offset_x},{845 + offset_y},1,2,1,1,N,"{d['q16']}"
+A{380 + offset_x},{670 + offset_y},1,1,2,2,N,"{tamanhos[0]}"
+A{380 + offset_x},{730 + offset_y},1,1,2,2,N,"{tamanhos[1]}"
+A{380 + offset_x},{790 + offset_y},1,1,2,2,N,"{tamanhos[2]}"
+A{380 + offset_x},{850 + offset_y},1,1,2,2,N,"{tamanhos[3]}"
+
+A{230 + offset_x},{675 + offset_y},1,1,2,2,N,"{d['q10']}"
+A{230 + offset_x},{735 + offset_y},1,1,2,2,N,"{d['q12']}"
+A{230 + offset_x},{795 + offset_y},1,1,2,2,N,"{d['q14']}"
+A{230 + offset_x},{855 + offset_y},1,1,2,2,N,"{d['q16']}"
+
+A{90 + offset_x},{675 + offset_y},1,1,2,2,N,"{d['q10']}"
+A{90 + offset_x},{735 + offset_y},1,1,2,2,N,"{d['q12']}"
+A{90 + offset_x},{795 + offset_y},1,1,2,2,N,"{d['q14']}"
+A{90 + offset_x},{855 + offset_y},1,1,2,2,N,"{d['q16']}"
 """
     else:  # 3 colunas
         epl += f"""
-A{380 + offset_x},{670 + offset_y},1,2,1,1,N,"{tamanhos[0]}"
-A{380 + offset_x},{750 + offset_y},1,2,1,1,N,"{tamanhos[1]}"
-A{380 + offset_x},{830 + offset_y},1,2,1,1,N,"{tamanhos[2]}"
+A{380 + offset_x},{710 + offset_y},1,1,2,2,N,"{tamanhos[0]}"
+A{380 + offset_x},{800 + offset_y},1,1,2,2,N,"{tamanhos[1]}"
+A{380 + offset_x},{890 + offset_y},1,1,2,2,N,"{tamanhos[2]}"
 
-A{230 + offset_x},{670 + offset_y},1,2,1,1,N,"{d['q10']}"
-A{230 + offset_x},{750 + offset_y},1,2,1,1,N,"{d['q12']}"
-A{230 + offset_x},{830 + offset_y},1,2,1,1,N,"{d['q14']}"
+A{230 + offset_x},{710 + offset_y},1,1,2,2,N,"{d['q10']}"
+A{230 + offset_x},{800 + offset_y},1,1,2,2,N,"{d['q12']}"
+A{230 + offset_x},{890 + offset_y},1,1,2,2,N,"{d['q14']}"
 
-A{100 + offset_x},{670 + offset_y},1,2,1,1,N,"{d['q10']}"
-A{100 + offset_x},{750 + offset_y},1,2,1,1,N,"{d['q12']}"
-A{100 + offset_x},{830 + offset_y},1,2,1,1,N,"{d['q14']}"
+A{90 + offset_x},{710 + offset_y},1,1,2,2,N,"{d['q10']}"
+A{90 + offset_x},{800 + offset_y},1,1,2,2,N,"{d['q12']}"
+A{90 + offset_x},{890 + offset_y},1,1,2,2,N,"{d['q14']}"
 """
 
     epl += "P1\n"
