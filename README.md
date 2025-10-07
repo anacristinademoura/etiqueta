@@ -1,267 +1,119 @@
-# Editor de Etiquetas EPL
-
-Este programa (`etiqueta_epl.py`) permite criar e visualizar etiquetas no formato EPL2 para impressoras Zebra, além de enviá-las para impressão via rede. Ele gera etiquetas com informações como número do volume, pedido, nota fiscal, descrição, cor, código de torra, quantidades por tamanho e total de peças. O programa inclui uma interface gráfica com visualização da etiqueta, zoom, e suporte a ícones personalizados.
-
-## Requisitos
-
-### Software
-
-- **Python 3.6 ou superior**: Necessário para executar o script `.py`.
-- **Bibliotecas Python**:
-    - **Pillow**: Para renderizar a visualização da etiqueta.
-        - Instale com: `pip install Pillow`
-    - **PyInstaller (opcional)**: Para gerar o executável `.exe`.
-        - Instale com: `pip install pyinstaller`
+#Editor de Etiquetas EPL#
+Descrição
+Este projeto é uma aplicação gráfica em Python para criação e impressão de etiquetas no formato EPL (Eltron Programming Language), compatível com impressoras térmicas como a ELGIN L42Pro e ZDesigner TLP 2844. A aplicação permite:
 
-### Arquivos Necessários
+Visualização prévia das etiquetas com base no código EPL gerado.
+Impressão direta em impressoras térmicas no Windows.
+Gerenciamento de volumes com salvamento automático e backup.
+Suporte a diferentes grades de tamanhos (10/12/14/16, 1/2/3, 4/5/6, P/M/G).
+Interface gráfica amigável usando Tkinter para preenchimento de dados e visualização.
 
-- `etiqueta_epl.py`: O script principal.
-- `icon_win.ico`: Ícone para a janela e barra de tarefas no Windows (deve conter resoluções 16x16, 32x32, 64x64 pixels).
-- `icon_lux.png`: Ícone alternativo para outros sistemas ou fallback (recomendado: 32x32 pixels).
+A aplicação é ideal para ambientes onde é necessário gerar etiquetas personalizadas com informações como número de volume, pedido, descrição, tamanhos e quantidades.
+Requisitos
 
-Coloque esses arquivos na mesma pasta do script (ex.: `C:\Users\SeuUsuario\Documentos\Python\Etiqueta\`).
+Sistema Operacional: Windows (impressão direta suportada apenas no Windows).
+Python: Versão 3.6 ou superior.
+Dependências:
+Pillow (PIL) para renderização de imagens.
+pywin32 (apenas no Windows, para comunicação com impressoras).
+tkinter (geralmente incluído com Python, para a interface gráfica).
 
-### Hardware
 
-- Impressora Zebra compatível com EPL2 (ex.: ZP450, ZP500, GK420).
-- Conexão de rede: A impressora deve estar na mesma rede que o computador, com um endereço IP acessível.
+Uma impressora térmica compatível com EPL (ex.: ELGIN L42Pro, ZDesigner TLP 2844).
+Fonte TrueType (ex.: arial.ttf) para melhor renderização de texto (opcional).
 
-### Configuração da Impressora
+Instalação
 
-1. **Obtenha o IP da impressora**:
-    - Consulte o manual da impressora ou o painel de controle para encontrar o endereço IP (ex.: `192.168.x.x`).
-    - Verifique a conexão com:
-      ```bash
-      ping <IP_DA_IMPRESSORA>
-      telnet <IP_DA_IMPRESSORA> 9100
-      ```
-    Se o Telnet conectar, a impressora está acessível.
+Clone o repositório:
+git clone https://github.com/seu_usuario/editor-etiquetas-epl.git
+cd editor-etiquetas-epl
 
-2. **Confirme o protocolo**:
-    - O programa usa o protocolo EPL2 na porta 9100 (padrão para impressoras Zebra).
-    - Verifique no manual da impressora se ela suporta EPL2. Se usar ZPL, o código precisará ser ajustado.
 
-3. **Tamanho do papel**:
-    - Configure a impressora para o tamanho de etiqueta correto (padrão no programa: 15 cm x 10 cm).
-    - Ajuste os campos **Largura da folha (cm)** e **Altura da folha (cm)** na interface, se necessário.
+Crie um ambiente virtual (opcional, mas recomendado):
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
 
-## Executando o Programa
 
-### Como Script Python (.py)
+Instale as dependências:
+pip install pillow pywin32
 
-1. **Verifique as dependências**:
-    - Certifique-se de que o **Pillow** está instalado:
-      ```bash
-      pip install Pillow
-      ```
 
-2. **Coloque os arquivos na pasta correta**:
-    - Certifique-se de que `etiqueta_epl.py`, `icon_win.ico`, e `icon_lux.png` estão na mesma pasta (ex.: `C:\Users\SeuUsuario\Documentos\Python\Etiqueta\`).
+Certifique-se de que a fonte arial.ttf está disponível no sistema ou ajuste o caminho no código (visualizar_epl).
 
-3. **Execute o script**:
-    - Abra um terminal na pasta do script e execute:
-      ```bash
-      python etiqueta_epl.py
-      ```
+Execute a aplicação:
+python main.py
 
-4. **Use a interface**:
-    - A interface gráfica abrirá com campos para inserir dados da etiqueta.
-    - Preencha os campos:
-      - **Largura da folha (cm)**: Tamanho horizontal da etiqueta (ex.: 15).
-      - **Altura da folha (cm)**: Tamanho vertical da etiqueta (ex.: 10).
-      - **IP da impressora**: Insira o IP da impressora (ex.: `192.168.x.x`).
-      - **Número do volume**: Número da etiqueta (ex.: 100). Pode ser editado manualmente e só incrementa ao imprimir.
-      - **Outros campos**: Pedido, NF, descrição, cor, código de torra, quantidades por tamanho (10, 12, 14, 16), e quantas etiquetas.
-    - Clique em **Atualizar Visualização** para ver a etiqueta.
-    - Use a roda do mouse para aplicar zoom e arraste a imagem com o botão esquerdo.
-    - Clique em **Enviar para Impressora** para imprimir. O número do volume será incrementado automaticamente após cada impressão.
 
-### Como Executável (.exe)
 
-1. **Gere o .exe com PyInstaller**:
-    - Certifique-se de que o **PyInstaller** está instalado:
-      ```bash
-      pip install pyinstaller
-      ```
+Uso
 
-2. **Na pasta do script, execute**:
-    ```bash
-    pyinstaller --onefile --windowed --icon=icon_win.ico --add-data "icon_win.ico;." --add-data "icon_lux.png;." --clean etiqueta_epl.py
-    ```
+Iniciar a aplicação:
 
-    No Linux/Mac, use `:` em vez de `;`:
-    ```bash
-    pyinstaller --onefile --windowed --icon=icon_win.ico --add-data "icon_win.ico:." --add-data "icon_lux.png:." --clean etiqueta_epl.py
-    ```
+Execute o script principal (main.py) para abrir a interface gráfica.
 
-    O arquivo `etiqueta_epl.exe` será gerado na pasta `dist`.
 
-3. **Execute o .exe**:
-    - Navegue até a pasta `dist` (ex.: `C:\Users\SeuUsuario\Documentos\Python\Etiqueta\dist`).
-    - Execute `etiqueta_epl.exe`:
-      ```bash
-      dist\etiqueta_epl.exe
-      ```
+Preencher os campos:
 
-4. **Use a interface**:
-    - Siga as mesmas instruções do modo `.py` para preencher os campos e imprimir.
+Insira informações como título, número do volume, pedido, nota fiscal, descrição, cor, código e quantidades por tamanho.
+Escolha a grade de tamanhos (10/12/14/16, 1/2/3, 4/5/6 ou P/M/G) no menu suspenso.
+Defina a quantidade de etiquetas a serem impressas.
 
-## Funcionalidades
 
-### Visualização da Etiqueta
+Visualizar a etiqueta:
 
-- Clique em **Atualizar Visualização** (botão azul) para renderizar a etiqueta com os dados inseridos.
-- Use a roda do mouse para aplicar zoom (0.5x a 5.0x) e arraste com o botão esquerdo para mover a imagem.
+Clique em Atualizar Visualização para ver uma prévia da etiqueta no canvas à direita.
+Use o mouse para arrastar (pan) ou a roda do mouse para zoom.
 
-### Impressão
 
-- Insira o **IP correto da impressora** no campo "IP da impressora".
-- Clique em **Enviar para Impressora** (botão azul acinzentado) para enviar a etiqueta.
-- O campo **Quantas etiquetas** determina quantas cópias serão impressas, incrementando o volume a cada impressão.
+Imprimir etiquetas:
 
-### Número do Volume
+Selecione a impressora (ex.: ELGIN L42Pro) no campo "Nome da impressora".
+Clique em Imprimir Etiqueta para enviar as etiquetas à impressora.
+O número do volume é incrementado automaticamente e salvo em contador_volume.txt.
 
-- O campo **Número do volume** é inicializado com o próximo número disponível (baseado em `contador_volume.txt`).
-- Pode ser editado manualmente para visualização sem alterar o contador.
-- O contador é incrementado e salvo em `contador_volume.txt` apenas ao imprimir.
 
-### Ícones
+Gerenciamento de volumes:
 
-- O programa usa `icon_win.ico` para a janela e barra de tarefas no Windows.
-- `icon_lux.png` é usado como fallback ou em outros sistemas.
+O número do volume é salvo em contador_volume.txt com backup em contador_volume.txt.bak.
+A aplicação alerta se o número do volume for menor ou igual ao último salvo.
 
-## Solução de Problemas
 
-### Impressora Não Imprime
 
-#### Causa: IP incorreto ou impressora offline.
+Estrutura do Projeto
 
-- Verifique o IP no campo "IP da impressora".
-- Teste a conexão:
-  ```bash
-  ping <IP_DA_IMPRESSORA>
-  telnet <IP_DA_IMPRESSORA> 9100
-  ```
+main.py: Script principal contendo a lógica da aplicação, interface gráfica e funções de geração/impressão de etiquetas.
+contador_volume.txt: Arquivo que armazena o último número de volume.
+contador_volume.txt.bak: Backup do arquivo de volume.
+icon_win.ico / icon_lux.png: Ícones opcionais para a interface gráfica (Windows/Linux).
 
-Se o telnet conectar, a impressora está acessível.
+Funcionalidades Principais
 
-### Verifique o protocolo:
+Geração de EPL: Monta o código EPL com base nos dados fornecidos, suportando diferentes grades de tamanhos.
+Visualização: Renderiza a etiqueta como uma imagem usando a biblioteca PIL, com suporte a texto rotacionado e fontes TrueType.
+Impressão: Envia o código EPL diretamente para a impressora via pywin32 (Windows).
+Interface Gráfica: Interface intuitiva com Tkinter, incluindo campos dinâmicos para quantidades e suporte a zoom/arrastar na visualização.
+Gerenciamento de Erros: Validações para entradas numéricas, tamanhos de texto e compatibilidade com a impressora.
 
-- O programa usa EPL2 na porta 9100 (padrão para impressoras Zebra).
+Limitações
 
-- Confirme no manual da impressora se ela suporta EPL2. Para ZPL, o código precisa de ajustes.
-
-### Configure o tamanho do papel:
-
-- Ajuste a impressora para o tamanho da etiqueta (padrão: 15 cm x 10 cm).
-
-- Modifique os campos "Largura da folha" e "Altura da folha" na interface, se necessário.
-
-### Instalação e Execução
-
-- Como Script Python (.py)
-
-### Instale as dependências:
-```bash
-pip install Pillow
-```
-
-### Organize os arquivos:
-
-- Coloque etiqueta_epl.py, icon_win.ico, e icon_lux.png na mesma pasta.
-
-### Execute o script:
-
-- Abra um terminal na pasta do script e execute:
-```bash
-python etiqueta_epl.py
-```
-Como Executável (.exe)
-
-- Gere o .exe com PyInstaller:
-```bash
-pip install pyinstaller
-pyinstaller --onefile --windowed --icon=icon_win.ico --add-data "icon_win.ico;." --add-data "icon_lux.png;." --clean etiqueta_epl.py
-```
-- No Linux/Mac, use : em vez de ;:
-```bash
-pyinstaller --onefile --windowed --icon=icon_win.ico --add-data "icon_win.ico:." --add-data "icon_lux.png:." --clean etiqueta_epl.py
-```
-O arquivo etiqueta_epl.exe será gerado em dist.
-
-### Execute o .exe:
-Navegue até dist (ex.: C:\Users\SeuUsuario\Documentos\Python\Etiqueta\dist).
-
-**Execute:**
-```bash
-dist\etiqueta_epl.exe
-```
-
-### Uso do Programa
-
-**Abra o programa:**
-
-A interface gráfica exibe campos para inserir dados da etiqueta.
-
-**Preencha os campos:**
-
-- Largura da folha (cm): Ex.: 15.
-- Altura da folha (cm): Ex.: 10.
-- IP da impressora: Insira o IP correto (ex.: 192.168.x.x, não use 127.0.0.1).
-- Número do volume: Ex.: 100 (editável, incrementa ao imprimir).
-- Número do pedido: Ex.: 123.
-- Número da nota fiscal: Ex.: 456.
-- Descrição do produto: Ex.: Camiseta.
-- Cor do produto: Ex.: Azul.
-- Código Torra: Ex.: 789.
-- Quantidade tamanho 10, 12, 14, 16: Ex.: 10, 20, 30, 40.
-- Quantas etiquetas: Ex.: 1.
-
-**Visualize a etiqueta:**
-
-- Clique em Atualizar Visualização (botão azul).
-- Use a roda do mouse para zoom e o botão esquerdo para arrastar.
-
-**Imprima a etiqueta:**
-
-- Clique em Enviar para Impressora (botão azul acinzentado).
-- O programa envia a etiqueta para impressora.
-
-Verifique a impressão e a mensagem no console (ex.: Etiqueta enviada. Volume #100).
-
-## Solução de Problemas
-
-**Impressora não imprime:**
-
-- Causa: IP incorreto ou impressora offline.
-**Solução:** Verifique o IP e teste com:
-```bash
-ping <IP_DA_IMPRESSORA>
-telnet <IP_DA_IMPRESSORA> 9100
-```
-Corrija o IP no campo "IP da impressora".
-
-- Causa: Impressora não suporta EPL2.
-**Solução:** Confirme o protocolo no manual. Para ZPL, o código precisa de ajustes.
-
-- Causa: Tamanho de papel incorreto.
-**Solução:** Ajuste "Largura da folha" e "Altura da folha" na interface.
-
-## Ícone não aparece:
-
-- Causa: Arquivos icon_win.ico ou icon_lux.png ausentes/inválidos.
-**Solução:** Confirme que os arquivos estão na pasta e são válidos (ICO: 16x16, 32x32, 64x64; PNG: 32x32).
-
-- Limpe o cache de ícones do Windows:
-```bash
-taskkill /f /im explorer.exe
-del %localappdata%\Microsoft\Windows\Explorer\iconcache*.db
-start explorer.exe
-```
-
-## Erro na visualização:
-- Causa: Campos obrigatórios inválidos.
-**Solução:** Preencha "Largura da folha", "Altura da folha", e "Número do volume" com valores válidos.
+Impressão: Suportada apenas no Windows devido à dependência do pywin32.
+Fonte: A renderização de texto depende de uma fonte TrueType (ex.: arial.ttf). Caso não esteja disponível, usa a fonte padrão do PIL.
+Grades de tamanhos: Suporta apenas as grades predefinidas (10/12/14/16, 1/2/3, 4/5/6, P/M/G).
+Resolução: A visualização é otimizada para etiquetas de 10cm x 15cm (80 pontos/cm).
+
+Contribuição
+
+Faça um fork do repositório.
+Crie uma branch para sua feature (git checkout -b feature/nova-funcionalidade).
+Commit suas alterações (git commit -m 'Adiciona nova funcionalidade').
+Push para a branch (git push origin feature/nova-funcionalidade).
+Abra um Pull Request.
+
+Licença
+Este projeto está licenciado sob a MIT License.
+Contato
+Para dúvidas ou sugestões, entre em contato pelo GitHub Issues ou via e-mail: seu_email@exemplo.com.
 
 
 
