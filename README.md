@@ -103,7 +103,7 @@ python main.py
 Este projeto está licenciado sob a MIT License.
 
 ## Contato
-Para dúvidas ou sugestões, entre em contato pelo GitHub Issues ou via e-mail: seu_email@exemplo.com.
+Para dúvidas ou sugestões, entre em contato pelo GitHub Issues ou via e-mail: anacristinadmoura@gmail.com.
 
 
 
