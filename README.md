@@ -74,10 +74,10 @@ python main.py
     - A aplicação alerta se o número do volume for menor ou igual ao último salvo.
 
 ## Estrutura do Projeto
-    - **main.py**: Script principal contendo a lógica da aplicação, interface gráfica e funções de geração/impressão de etiquetas.
-    - **contador_volume.txt**: Arquivo que armazena o último número de volume.
-    - **contador_volume.txt.bak**: Backup do arquivo de volume.
-    - **icon_win.ico / icon_lux.png**: Ícones opcionais para a interface gráfica (Windows/Linux).
+    - main.py: Script principal contendo a lógica da aplicação, interface gráfica e funções de geração/impressão de etiquetas.
+    - contador_volume.txt: Arquivo que armazena o último número de volume.
+    - contador_volume.txt.bak: Backup do arquivo de volume.
+    - icon_win.ico / icon_lux.png: Ícones opcionais para a interface gráfica (Windows/Linux).
 
 ## Funcionalidades Principais
     - Geração de EPL: Monta o código EPL com base nos dados fornecidos, suportando diferentes grades de tamanhos.
@@ -87,16 +87,16 @@ python main.py
     - Gerenciamento de Erros: Validações para entradas numéricas, tamanhos de texto e compatibilidade com a impressora.
 
 ## Limitações
-    - Impressão: Suportada apenas no Windows devido à dependência do **pywin32**.
-    - Fonte: A renderização de texto depende de uma fonte TrueType (ex.: **arial.ttf**). Caso não esteja disponível, usa a fonte padrão do PIL.
+    - Impressão: Suportada apenas no Windows devido à dependência do pywin32.
+    - Fonte: A renderização de texto depende de uma fonte TrueType (ex.: arial.ttf). Caso não esteja disponível, usa a fonte padrão do PIL.
     - Grades de tamanhos: Suporta apenas as grades predefinidas (10/12/14/16, 1/2/3, 4/5/6, P/M/G).
     - Resolução: A visualização é otimizada para etiquetas de 10cm x 15cm (80 pontos/cm).
 
 ## Contribuição
     - Faça um fork do repositório.
-    - Crie uma branch para sua feature (**git checkout -b feature/nova-funcionalidade**).
-    - Commit suas alterações (**git commit -m 'Adiciona nova funcionalidade'**).
-    - Push para a branch (**git push origin feature/nova-funcionalidade**).
+    - Crie uma branch para sua feature (git checkout -b feature/nova-funcionalidade).
+    - Commit suas alterações (git commit -m 'Adiciona nova funcionalidade').
+    - Push para a branch (git push origin feature/nova-funcionalidade).
     - Abra um Pull Request.
 
 ## Licença
